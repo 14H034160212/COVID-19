@@ -51,7 +51,11 @@ class SqlAlchemyRepository(AbstractRepository):
         return user
 
     def get_article(self, id: int) -> Article:
-        return Article.query.get(id)  # needs to be tested
+        article = None
+        try:
+            article = Article.query.get(id)
+        except:  # what's the error type?
+            pass
 
     def get_articles(self, date: date = None) -> List[Article]:
         if date is None:

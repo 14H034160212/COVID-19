@@ -62,12 +62,14 @@ class FakeSession():
 
 
 def test_can_add_user(fake_repo, fake_session):
-    username = 'Kelly'
-    password = 'abcd1A23'
+    new_username = 'Kelly'
+    new_password = 'abcd1A23'
 
-    services.add_user(username, password, fake_repo, fake_session)
+    services.add_user(new_username, new_password, fake_repo, fake_session)
 
-    assert fake_repo.get_user(username).username == username
+    items = services.get_user(new_username, fake_repo, fake_session)
+    assert items['username'] == new_username
+    assert items['password'] == new_password
 
 def test_cannot_add_user_with_existing_name(fake_repo, fake_session):
     username = 'Andrew'
@@ -92,10 +94,10 @@ def test_can_add_comment(fake_repo, fake_session):
     services.add_comment(article_id, comment_text, username, fake_repo, fake_session)
 
     # Retrieve the commented article from the repo.
-    article = fake_repo.get_article(article_id)
+    comments = services.get_comments_for_article(article_id, fake_repo, fake_session)
 
-    # Check that the article's comments include a comment with the new comment text.
-    assert next((comment for comment in article.comments if comment.comment == comment_text), None) is not None
+    # Check that the comments include a comment with the new comment text.
+    assert next((dictionary['comment'] for dictionary in comments if dictionary['comment'] == comment_text), None) is not None
 
 def test_cannot_add_comment_for_non_existent_article(fake_repo, fake_session):
     article_id = 4
@@ -108,7 +110,7 @@ def test_cannot_add_comment_for_non_existent_article(fake_repo, fake_session):
 
 def test_cannot_add_comment_for_non_comment_containing_profanity(fake_repo, fake_session):
     article_id = 1
-    comment_text = 'Fuck you!'
+    comment_text = 'Fuck you pig!'
     username = 'Cindy'
 
     # Call the service layer to attempt to add the comment.
