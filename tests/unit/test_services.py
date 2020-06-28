@@ -1,48 +1,34 @@
-from typing import List
-
-from adapters.repository import AbstractRepository
-from domain.model import User, Article, Tag, make_comment, make_tag_association
-
-from datetime import date
-
-from service_layer import services, unit_of_work
-
 import pytest
+
+from application.adapters.repository import AbstractRepository
+
+from application.service_layer.unit_of_work import AbstractUnitOfWork
+from application.service_layer import services
+
+from application.domain.model import User
 
 
 class FakeRepository(AbstractRepository):
+
     def __init__(self):
-        self._users, \
-        self._articles,\
-        self._comments,\
-        self._tags = make_domain_model()
+        self.users = [
+            User('Andrew', 'andrew@gmail.com'),
+            User('Cindy', 'cindy@gmail.com')
+        ]
 
-    def add_user(self, user: User):
-        usernames = [user.username for user in self._users]
+    def add_user(self, user):
+        usernames = [user.username for user in self.users]
         if user.username not in usernames:
-            self._users.append(user)
+            self.users.append(user)
 
-    def get_user(self, username) -> User:
-        return next((user for user in self._users if user.username == username), None)
+    def get_user(self, username):
+        return next((user for user in self.users if user.username == username), None)
 
-    def get_article(self, id):
-        return next((article for article in self._articles if article.id == id), None)
-
-    def get_articles(self, date: date = None) -> List[Article]:
-        results = self._articles
-
-        if date is None:
-            results = [article for article in self.articles if article.date == date]
-        return results
-
-    def get_tags(self) -> List[Tag]:
-        return self._tags
-
-    def add_comment(self, comment):
-        self._comments.append(comment)
+    def get_all_users(self, username):
+        return self.users
 
 
-class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
+class FakeUnitOfWork(AbstractUnitOfWork):
 
     def __init__(self):
         self.repo = FakeRepository()
@@ -56,120 +42,22 @@ class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
 
 
 def test_can_add_user():
+    print('Testing')
     new_username = 'Kelly'
-    new_password = 'abcd1A23'
+    new_email = 'Kelly@gmail.com'
 
     uow = FakeUnitOfWork()
-    services.add_user(new_username, new_password, uow)
+    services.add_user(new_username, new_email, uow)
 
     items = services.get_user(new_username, uow)
     assert items['username'] == new_username
-    assert items['password'] == new_password
+    assert items['email'] == new_email
+
 
 def test_cannot_add_user_with_existing_name():
     username = 'Andrew'
-    password = 'abcd1A23'
+    email = 'andrew@gmail.com'
 
     uow = FakeUnitOfWork()
     with pytest.raises(services.NameNotUniqueException):
-        services.add_user(username, password, uow)
-
-def test_cannot_add_user_with_weak_password():
-    username = 'Kelly'
-    password = 'abcd'
-
-    uow = FakeUnitOfWork()
-    with pytest.raises(services.PasswordException):
-        services.add_user(username, password, uow)
-
-def test_can_add_comment():
-    article_id = 1
-    comment_text = 'COVID is here in NZ!'
-    username = 'Cindy'
-
-    uow = FakeUnitOfWork()
-
-    # Call the service layer to add the comment.
-    services.add_comment(article_id, comment_text, username, uow)
-
-    # Retrieve the commented article from the repo.
-    comments = services.get_comments_for_article(article_id, uow)
-
-    # Check that the comments include a comment with the new comment text.
-    assert next((dictionary['comment'] for dictionary in comments if dictionary['comment'] == comment_text), None) is not None
-
-def test_cannot_add_comment_for_non_existent_article():
-    article_id = 4
-    comment_text = 'COVID is here in NZ!'
-    username = 'Cindy'
-
-    uow = FakeUnitOfWork()
-
-    # Call the service layer to attempt to add the comment.
-    with pytest.raises(services.NonExistentArticleException):
-        services.add_comment(article_id, comment_text, username, uow)
-
-def test_cannot_add_comment_for_non_comment_containing_profanity():
-    article_id = 1
-    comment_text = 'Fuck you pig!'
-    username = 'Cindy'
-
-    uow = FakeUnitOfWork()
-    # Call the service layer to attempt to add the comment.
-    with pytest.raises(services.ProfanityException):
-        services.add_comment(article_id, comment_text, username, uow)
-
-def test_cannot_add_comment_for_non_existent_user():
-    pass
-    # Return to this later - need to consider too that only a logged in user can post a comment.
-
-def make_domain_model():
-    users = [
-        User('Andrew', '1111'),
-        User('Cindy', '1234')
-    ]
-
-    articles = [
-        Article(
-            date(2020, 2, 28),
-            'Coronavirus: First case of virus in New Zealand',
-            'The first case of coronavirus has been confirmed in New Zealand and authorities are now scrambling to track down people who may have come into contact with the patient.',
-            'https://www.stuff.co.nz/national/health/119899280/ministry-of-health-gives-latest-update-on-novel-coronavirus',
-            'https://resources.stuff.co.nz/content/dam/images/1/z/e/3/w/n/image.related.StuffLandscapeSixteenByNine.1240x700.1zduvk.png/1583369866749.jpg',
-            1
-        ),
-        Article(
-            date(2020, 3, 1),
-            'Coronavirus: Jacinda Ardern urges calm as panicked shoppers empty supermarket shelves',
-            'Panicked shoppers have forced the closure of a major food wholesaler on Saturday and today despite the Prime Minister urging New Zealanders to go about their daily lives after the countrys first case of coronavirus.',
-            'https://www.nzherald.co.nz/nz/news/article.cfm?c_id=1&objectid=12312828',
-            'https://www.nzherald.co.nz/resizer/CqBdC_bgpLVpthKbUUYSwL8UNLw=/620x465/smart/filters:quality(70)/arc-anglerfish-syd-prod-nzme.s3.amazonaws.com/public/I2F5HQJSBREH7P6YRXBVBKSP6A.jpg',
-            2
-        ),
-        Article(
-            date(2020, 3, 1),
-            'Coronavirus: Rest homes and retirement villages plead for national aged care response plan',
-            'The aged care sector is urgently asking health authorities to coordinate a national response to the coronavirus threat.',
-            'https://www.nzherald.co.nz/nz/news/article.cfm?c_id=1&objectid=12313398',
-            'https://www.nzherald.co.nz/resizer/6Nn7A2Yb4d_czHwT_bPQJaSuskk=/620x349/smart/filters:quality(70)/arc-anglerfish-syd-prod-nzme.s3.amazonaws.com/public/X46IV6IWXRC45PQBIJX6XPXHQM.jpg',
-            3
-        )
-    ]
-
-    comments = [
-        make_comment('COVID in NZ!', users[0], articles[0]),
-        make_comment('Loonies cleaning out the supermarkets', users[0], articles[1]),
-        make_comment('Bad news', users[1], articles[0])
-    ]
-
-    tags = [
-        Tag('News'),
-        Tag('New Zealand'),
-        Tag('World')
-    ]
-
-    make_tag_association(articles[0], tags[0])
-    make_tag_association(articles[0], tags[1])
-    make_tag_association(articles[1], tags[0])
-
-    return users, articles, comments, tags
+        services.add_user(username, email, uow)
