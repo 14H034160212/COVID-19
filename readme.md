@@ -5,12 +5,14 @@
 **Installation via `requirements.txt`**:
 
 ```shell
-$ cd project-pattern
+$ cd COVID-19
 $ py -3 -m venv venv
 $ venv\Scripts\activate
 $ pip install -r requirements.txt
 $ flask run
 ```
+
+If using PyCharm, set the virtual environment using 'File'->'Settings' and select 'Project:COVID-19' from the left menu. Select 'Project Interpreter', click on the gearwheel button and select 'Add'. Click the 'Existing environment' radio button to select the virtual environment. 
 
 ## Usage
 

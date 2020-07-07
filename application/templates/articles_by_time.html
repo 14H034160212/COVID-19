@@ -1,0 +1,72 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<main id="main">
+    <header>
+        <h1>{{date}}</h1>
+    </header>
+
+    <section>
+        This is where the stats will go - some parameters, perhaps a list of stats
+    </section>
+
+    {% for article in articles %}
+    <article style="clear:both">
+        <a href="{{article.hyperlink}}" target="_blank">
+            <img src={{article.image_hyperlink}} alt="article image">
+        </a>
+        <h2>{{article.title}}</h2>
+        <p>{{article.first_para}}</p>
+        <div style="float:left">
+            {% for tag in article.tags %}
+            <a href="#">{{tag.name}}</a>
+            {% endfor %}
+        </div>
+        <div style="float:right">
+            {% if article.id == show_comments_for_article and article.comments|length > 0 %}
+                {{article.comments|length}} comments
+            {% elif article.comments|length > 0 %}
+                <a href="{{article.view_comment_url}}">{{article.comments|length}} comments</a>
+            {% endif %}
+            <a href="{{article.add_comment_url}}">Comment</a>
+        </div>
+        {% if article.id == show_comments_for_article %}
+        <div style="clear:both">
+            {% for comment in article.comments %}
+                <p>{{comment.comment_text}}, by {{comment.username}}, {{comment.timestamp}}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </article>
+    {% endfor %}
+
+    <footer>
+        <nav style="clear:both">
+            <div style="float:left">
+                {% if first_article_url is not none %}
+                    <a href={{first_article_url}} class="first">&laquo;</a>
+                {% else %}
+                    &laquo;
+                {% endif %}
+                {% if prev_article_url is not none %}
+                     <a href={{prev_article_url}} class="previous">&#8249;</a>
+                {% else %}
+                    &#8249;
+                {% endif %}
+            </div>
+            <div style="float:right">
+                {% if next_article_url is not none %}
+                    <a href={{next_article_url}} class="next">&#8250;</a>
+                {% else %}
+                    &#8250;
+                {% endif %}
+                {% if last_article_url is not none %}
+                    <a href={{last_article_url}} class="last">&raquo;</a>
+                {% else %}
+                    &raquo;
+                {% endif %}
+            </div>
+        </nav>
+    </footer>
+</main>
+{% endblock %}

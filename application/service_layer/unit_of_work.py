@@ -1,12 +1,17 @@
+from __future__ import annotations
 import abc
 
-from application.adapters.repository import SqlAlchemyRepository
+from sqlalchemy.orm import scoped_session
+
+from flask import _app_ctx_stack
+
+from application.adapters import repository
+
 
 class AbstractUnitOfWork(abc.ABC):
-    def __init__(self):
-        repo = None
+    repo: repository.AbstractRepository
 
-    def __enter__(self):
+    def __enter__(self) -> AbstractUnitOfWork:
         return self
 
     def __exit__(self, *args):
@@ -27,14 +32,13 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
         self.session_factory = session_factory
 
     def __enter__(self):
-        self.session = self.session_factory()
-        self.repo = SqlAlchemyRepository(self.session)
+        self.session = scoped_session(self.session_factory, scopefunc=_app_ctx_stack.__ident_func__)
+        print('In unit of work')
+        self.repo = repository.SqlAlchemyRepository(self.session)
         return super().__enter__()
 
     def __exit__(self, *args):
         super().__exit__()
-        # Don't close the session because any lazily loaded data won't be available afterwards.
-        # Flask-SQLAlchemy automatically removes sessions at the end of a request.
 
     def commit(self):
         self.session.commit()
@@ -42,3 +46,6 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
     def rollback(self):
         self.session.rollback()
 
+    def close_current_session(self):
+        if self.session is not None:
+            self.session.close()

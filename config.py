@@ -1,9 +1,9 @@
 """Flask configuration variables."""
-from os import environ, path
+from os import environ, path, getenv
 from dotenv import load_dotenv
 
-basedir = path.abspath(path.dirname(__file__))
-load_dotenv(path.join(basedir, '.env'))
+# Load environment variables from file .env, stored in this directory.
+load_dotenv()
 
 
 class Config:
