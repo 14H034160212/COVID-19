@@ -30,6 +30,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 
     def __init__(self, session_factory):
         self.session_factory = session_factory
+        self.session = None
 
     def __enter__(self):
         self.session = scoped_session(self.session_factory, scopefunc=_app_ctx_stack.__ident_func__)

@@ -58,6 +58,7 @@ def user_to_dto(user: User):
         'username': user.username,
         'password': user.password
     }
+    return user_dto
 
 
 # ===========================================

@@ -39,11 +39,19 @@ class AbstractRepository(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_date_of_previous_article(self):
+    def get_date_of_previous_article(self, article: Article):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_date_of_next_article(self):
+    def get_date_of_next_article(self, article: Article):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_articles_by_id(self, id_list):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_article_ids_for_tag(self, tag_name: str):
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -105,6 +113,22 @@ class SqlAlchemyRepository(AbstractRepository):
 
     def get_last_article(self):
         return self._session.query(Article).order_by(desc(Article._id)).first()
+
+    def get_articles_by_id(self, id_list):
+        return self._session.query(Article).filter(Article._id.in_(id_list)).all()
+
+    def get_article_ids_for_tag(self, tag_name: str):
+        # Use native SQL to retrieve article ids, since there is no mapped class for the article_tags table.
+        row = self._session.execute('SELECT id FROM tags WHERE name = :tag_name', {'tag_name': tag_name}).fetchone()
+        tag_id = row[0]
+
+        article_ids = self._session.execute(
+            'SELECT article_id FROM article_tags WHERE tag_id = :tag_id ORDER BY article_id ASC',
+            {'tag_id': tag_id}
+        ).fetchall()
+        article_ids = [id[0] for id in article_ids]
+
+        return article_ids
 
     def get_date_of_previous_article(self, article: Article):
         """ Returns the closest previous date of an article to the argument. If there are no previous articles,

@@ -1,10 +1,14 @@
 <nav id="nav">
-    <a href="#">Sign in</a>
-    <a href="#">Register</a>
-    <a href="#">Navigate timeline</a>
-    <a href="#">Visualise statistics</a>
-    <a href="#">Browse articles by tag</a>
-    <a href="#">Tag-1</a>
-    <a href="#">Tag-2</a>
-    <a href="#">Tag-3</a>
+    {{ date }}
+    <a href="{{ basic_urls['register'] }}">Register</a>
+    <a href="{{ basic_urls['login'] }}">Login</a>
+    <a href="{{ basic_urls['logout'] }}">Logout</a>
+    <a href="{{ basic_urls['articles'] }}">Browse timeline</a>
+
+    <div>
+        Browse by tag
+        {% for key in tag_urls %}
+            <a href= "{{ tag_urls[key] }}">{{ key }}</a>
+        {% endfor %}
+    </div>
 </nav>

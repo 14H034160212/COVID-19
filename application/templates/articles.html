@@ -3,7 +3,7 @@
 {% block content %}
 <main id="main">
     <header>
-        <h1>{{date}}</h1>
+        <h1>{{ articles_title }}</h1>
     </header>
 
     <section>
@@ -19,7 +19,7 @@
         <p>{{article.first_para}}</p>
         <div style="float:left">
             {% for tag in article.tags %}
-            <a href="#">{{tag.name}}</a>
+                <a href="{{ tag_urls[tag.name] }}">{{ tag.name }}</a>
             {% endfor %}
         </div>
         <div style="float:right">
