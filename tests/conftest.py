@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 from sqlalchemy import create_engine
@@ -5,8 +7,14 @@ from sqlalchemy.orm import sessionmaker, clear_mappers
 
 from datetime import date, datetime
 
-from adapters.orm import metadata, map_model_to_tables
+from application.adapters.orm import metadata, map_model_to_tables
+from application.adapters.populate_memory_repository import make_repo
 
+
+@pytest.fixture
+def in_memory_repo():
+    data_path = os.path.abspath(os.path.join('..', 'test_data'))
+    return make_repo(data_path)
 
 @pytest.fixture
 def in_memory_db():

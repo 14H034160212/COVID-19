@@ -68,6 +68,8 @@ def add_comment(article_id: int, comment_text: str, username: str, uow: unit_of_
             raise NonExistentArticleException
 
         user = uow.repo.get_user(username)
+        if user is None:
+            raise UnknownUserException
 
         # Create comment.
         comment = make_comment(comment_text, user, article)
@@ -78,10 +80,13 @@ def add_comment(article_id: int, comment_text: str, username: str, uow: unit_of_
 
 
 def get_article(article_id: int, uow: unit_of_work.AbstractUnitOfWork):
-    print('Services get_article() looking up article ', article_id)
     article = None
     with uow:
         article = uow.repo.get_article(article_id)
+
+        if article is None:
+            raise NonExistentArticleException
+
     return article_to_dto(article)
 
 
@@ -105,7 +110,7 @@ def get_last_article(uow: unit_of_work.AbstractUnitOfWork):
 def get_articles_by_date(date, uow: unit_of_work.AbstractUnitOfWork):
     # Returns articles for the target date (empty if no matches), the date of the previous article (might be null), the date of the next article (might be null)
     with uow:
-        articles = uow.repo.get_articles(target_date=date)
+        articles = uow.repo.get_articles_by_date(target_date=date)
 
         articles_dto = list()
         prev_date = next_date = None

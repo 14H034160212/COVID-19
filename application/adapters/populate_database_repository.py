@@ -8,7 +8,7 @@ tags = dict()
 
 
 def article_record_generator():
-    with open('news_articles.csv') as infile:
+    with open('../data/news_articles.csv') as infile:
         reader = csv.reader(infile)
 
         # Read first line of the the CSV file.
@@ -103,13 +103,13 @@ def main():
         INSERT INTO users (
         id, username, password)
         VALUES (?, ?, ?)"""
-    cursor.executemany(insert_users, generic_generator('users.csv'))
+    cursor.executemany(insert_users, generic_generator('../data/users.csv'))
 
     insert_comments = """
         INSERT INTO comments (
         id, user_id, article_id, comment, timestamp)
         VALUES (?, ?, ?, ?, ?)"""
-    cursor.executemany(insert_comments, generic_generator('comments.csv'))
+    cursor.executemany(insert_comments, generic_generator('../data/comments.csv'))
 
     conn.commit()
     conn.close()

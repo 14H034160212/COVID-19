@@ -38,12 +38,12 @@ class User:
 
 class Comment:
     def __init__(
-            self, user: User, article: 'Article', comment: str
+            self, user: User, article: 'Article', comment: str, timestamp: datetime
     ):
         self._user = user
         self._article = article
         self._comment = comment
-        self._timestamp = datetime.today()
+        self._timestamp = timestamp
 
     @property
     def user(self) -> User:
@@ -136,6 +136,9 @@ class Article:
     def __hash__(self):
         return hash((self._date, self._title, self._first_para, self._hyperlink, self._image_hyperlink))
 
+    def __lt__(self, other):
+        return self._date < other._date
+
 
 class Tag:
     def __init__(
@@ -167,8 +170,8 @@ class Tag:
         return hash(self._tag_name)
 
 
-def make_comment(comment_text: str, user: User, article: Article):
-    comment = Comment(user, article, comment_text)
+def make_comment(comment_text: str, user: User, article: Article, timestamp: datetime = datetime.today()):
+    comment = Comment(user, article, comment_text, timestamp)
     user.add_comment(comment)
     article.add_comment(comment)
 

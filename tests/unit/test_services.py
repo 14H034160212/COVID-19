@@ -1,51 +1,21 @@
 from typing import List
 
-from adapters.repository import AbstractRepository
-from domain.model import User, Article, Tag, make_comment, make_tag_association
+from application.adapters.repository import AbstractRepository, MemoryRepository
+from application.domain.model import User, Article, Tag, make_comment, make_tag_association
 
 from datetime import date
 
-from service_layer import services, unit_of_work
+from application.service_layer import services, unit_of_work
 
 import pytest
 
-
-class FakeRepository(AbstractRepository):
-    def __init__(self):
-        self._users, \
-        self._articles,\
-        self._comments,\
-        self._tags = make_domain_model()
-
-    def add_user(self, user: User):
-        usernames = [user.username for user in self._users]
-        if user.username not in usernames:
-            self._users.append(user)
-
-    def get_user(self, username) -> User:
-        return next((user for user in self._users if user.username == username), None)
-
-    def get_article(self, id):
-        return next((article for article in self._articles if article.id == id), None)
-
-    def get_articles(self, date: date = None) -> List[Article]:
-        results = self._articles
-
-        if date is None:
-            results = [article for article in self.articles if article.date == date]
-        return results
-
-    def get_tags(self) -> List[Tag]:
-        return self._tags
-
-    def add_comment(self, comment):
-        self._comments.append(comment)
+from application.service_layer.services import AuthenticationException
 
 
 class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
 
-    def __init__(self):
-        self.repo = FakeRepository()
+    def __init__(self, repo: MemoryRepository):
+        self.repo = repo
         self.committed = False
 
     def commit(self):
@@ -55,121 +25,172 @@ class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
         pass
 
 
-def test_can_add_user():
-    new_username = 'Kelly'
+def test_can_add_user(in_memory_repo):
+    new_username = 'jz'
     new_password = 'abcd1A23'
 
-    uow = FakeUnitOfWork()
+    uow = FakeUnitOfWork(in_memory_repo)
     services.add_user(new_username, new_password, uow)
 
-    items = services.get_user(new_username, uow)
-    assert items['username'] == new_username
-    assert items['password'] == new_password
+    user_as_dict = services.get_user(new_username, uow)
+    assert user_as_dict['username'] == new_username
 
-def test_cannot_add_user_with_existing_name():
-    username = 'Andrew'
+    # Check that password has been encrypted.
+    assert user_as_dict['password'].startswith('pbkdf2:sha256:')
+
+
+def test_cannot_add_user_with_existing_name(in_memory_repo):
+    username = 'thorke'
     password = 'abcd1A23'
 
-    uow = FakeUnitOfWork()
+    uow = FakeUnitOfWork(in_memory_repo)
     with pytest.raises(services.NameNotUniqueException):
         services.add_user(username, password, uow)
 
-def test_cannot_add_user_with_weak_password():
-    username = 'Kelly'
-    password = 'abcd'
 
-    uow = FakeUnitOfWork()
-    with pytest.raises(services.PasswordException):
-        services.add_user(username, password, uow)
+def test_authentication_with_valid_credentials(in_memory_repo):
+    new_username = 'pmccartney'
+    new_password = 'abcd1A23'
 
-def test_can_add_comment():
-    article_id = 1
-    comment_text = 'COVID is here in NZ!'
-    username = 'Cindy'
+    uow = FakeUnitOfWork(in_memory_repo)
+    services.add_user(new_username, new_password, uow)
 
-    uow = FakeUnitOfWork()
+    try:
+        services.authenticate_user(new_username, new_password, uow)
+    except AuthenticationException:
+        assert False
+
+
+def test_authentication_with_invalid_credentials(in_memory_repo):
+    new_username = 'pmccartney'
+    new_password = 'abcd1A23'
+
+    uow = FakeUnitOfWork(in_memory_repo)
+    services.add_user(new_username, new_password, uow)
+
+    with pytest.raises(services.AuthenticationException):
+        services.authenticate_user(new_username, '0987654321', uow)
+
+
+def test_can_add_comment(in_memory_repo):
+    article_id = 3
+    comment_text = 'The loonies are stripping the supermarkets bare!'
+    username = 'fmercury'
+
+    uow = FakeUnitOfWork(in_memory_repo)
 
     # Call the service layer to add the comment.
     services.add_comment(article_id, comment_text, username, uow)
 
-    # Retrieve the commented article from the repo.
-    comments = services.get_comments_for_article(article_id, uow)
+    # Retrieve the comments for the article from the repository.
+    comments_as_dict = services.get_comments_for_article(article_id, uow)
 
     # Check that the comments include a comment with the new comment text.
-    assert next((dictionary['comment'] for dictionary in comments if dictionary['comment'] == comment_text), None) is not None
+    assert next(
+        (dictionary['comment_text'] for dictionary in comments_as_dict if dictionary['comment_text'] == comment_text),
+        None) is not None
 
-def test_cannot_add_comment_for_non_existent_article():
-    article_id = 4
-    comment_text = 'COVID is here in NZ!'
-    username = 'Cindy'
 
-    uow = FakeUnitOfWork()
+def test_cannot_add_comment_for_non_existent_article(in_memory_repo):
+    article_id = 7
+    comment_text = "COVID-19 - what's that?"
+    username = 'fmercury'
+
+    uow = FakeUnitOfWork(in_memory_repo)
 
     # Call the service layer to attempt to add the comment.
     with pytest.raises(services.NonExistentArticleException):
         services.add_comment(article_id, comment_text, username, uow)
 
-def test_cannot_add_comment_for_non_comment_containing_profanity():
-    article_id = 1
-    comment_text = 'Fuck you pig!'
-    username = 'Cindy'
 
-    uow = FakeUnitOfWork()
+def test_cannot_add_comment_by_unknown_user(in_memory_repo):
+    article_id = 3
+    comment_text = 'The loonies are stripping the supermarkets bare!'
+    username = 'gmichael'
+
+    uow = FakeUnitOfWork(in_memory_repo)
+
     # Call the service layer to attempt to add the comment.
-    with pytest.raises(services.ProfanityException):
+    with pytest.raises(services.UnknownUserException):
         services.add_comment(article_id, comment_text, username, uow)
 
-def test_cannot_add_comment_for_non_existent_user():
-    pass
-    # Return to this later - need to consider too that only a logged in user can post a comment.
 
-def make_domain_model():
-    users = [
-        User('Andrew', '1111'),
-        User('Cindy', '1234')
-    ]
+def test_can_get_article(in_memory_repo):
+    article_id = 2
 
-    articles = [
-        Article(
-            date(2020, 2, 28),
-            'Coronavirus: First case of virus in New Zealand',
-            'The first case of coronavirus has been confirmed in New Zealand and authorities are now scrambling to track down people who may have come into contact with the patient.',
-            'https://www.stuff.co.nz/national/health/119899280/ministry-of-health-gives-latest-update-on-novel-coronavirus',
-            'https://resources.stuff.co.nz/content/dam/images/1/z/e/3/w/n/image.related.StuffLandscapeSixteenByNine.1240x700.1zduvk.png/1583369866749.jpg',
-            1
-        ),
-        Article(
-            date(2020, 3, 1),
-            'Coronavirus: Jacinda Ardern urges calm as panicked shoppers empty supermarket shelves',
-            'Panicked shoppers have forced the closure of a major food wholesaler on Saturday and today despite the Prime Minister urging New Zealanders to go about their daily lives after the countrys first case of coronavirus.',
-            'https://www.nzherald.co.nz/nz/news/article.cfm?c_id=1&objectid=12312828',
-            'https://www.nzherald.co.nz/resizer/CqBdC_bgpLVpthKbUUYSwL8UNLw=/620x465/smart/filters:quality(70)/arc-anglerfish-syd-prod-nzme.s3.amazonaws.com/public/I2F5HQJSBREH7P6YRXBVBKSP6A.jpg',
-            2
-        ),
-        Article(
-            date(2020, 3, 1),
-            'Coronavirus: Rest homes and retirement villages plead for national aged care response plan',
-            'The aged care sector is urgently asking health authorities to coordinate a national response to the coronavirus threat.',
-            'https://www.nzherald.co.nz/nz/news/article.cfm?c_id=1&objectid=12313398',
-            'https://www.nzherald.co.nz/resizer/6Nn7A2Yb4d_czHwT_bPQJaSuskk=/620x349/smart/filters:quality(70)/arc-anglerfish-syd-prod-nzme.s3.amazonaws.com/public/X46IV6IWXRC45PQBIJX6XPXHQM.jpg',
-            3
-        )
-    ]
+    uow = FakeUnitOfWork(in_memory_repo)
 
-    comments = [
-        make_comment('COVID in NZ!', users[0], articles[0]),
-        make_comment('Loonies cleaning out the supermarkets', users[0], articles[1]),
-        make_comment('Bad news', users[1], articles[0])
-    ]
+    article_as_dict = services.get_article(article_id, uow)
 
-    tags = [
-        Tag('News'),
-        Tag('New Zealand'),
-        Tag('World')
-    ]
+    assert article_as_dict['id'] == article_id
+    assert article_as_dict['date'] == date.fromisoformat('2020-02-29')
+    assert article_as_dict['title'] == 'Covid 19 coronavirus: US deaths double in two days, Trump says quarantine not necessary'
+    #assert article_as_dict['first_para'] == 'US President Trump tweeted on Saturday night (US time) that he has asked the Centres for Disease Control and Prevention to issue a ""strong Travel Advisory"" but that a quarantine on the New York region"" will not be necessary.'
+    assert article_as_dict['hyperlink'] == 'https://www.nzherald.co.nz/world/news/article.cfm?c_id=2&objectid=12320699'
+    assert article_as_dict['image_hyperlink'] == 'https://www.nzherald.co.nz/resizer/159Vi4ELuH2fpLrv1SCwYLulzoM=/620x349/smart/filters:quality(70)/arc-anglerfish-syd-prod-nzme.s3.amazonaws.com/public/XQOAY2IY6ZEIZNSW2E3UMG2M4U.jpg'
+    assert len(article_as_dict['comments']) == 0
 
-    make_tag_association(articles[0], tags[0])
-    make_tag_association(articles[0], tags[1])
-    make_tag_association(articles[1], tags[0])
+    tag_names = [dictionary['name'] for dictionary in article_as_dict['tags']]
+    assert 'World' in tag_names
+    assert 'Health' in tag_names
+    assert 'Politics' in tag_names
 
-    return users, articles, comments, tags
+
+def test_cannot_get_article_with_non_existent_id(in_memory_repo):
+    article_id = 7
+
+    uow = FakeUnitOfWork(in_memory_repo)
+
+    # Call the service layer to attempt to retrieve the Article.
+    with pytest.raises(services.NonExistentArticleException):
+        services.get_article(article_id, uow)
+
+
+def test_get_first_article(in_memory_repo):
+    uow = FakeUnitOfWork(in_memory_repo)
+
+    article_as_dict = services.get_first_article(uow)
+
+    assert article_as_dict['id'] == 1
+
+
+def test_get_last_article(in_memory_repo):
+    uow = FakeUnitOfWork(in_memory_repo)
+
+    article_as_dict = services.get_last_article(uow)
+
+    assert article_as_dict['id'] == 6
+
+
+def test_get_articles_by_date_with_one_date(in_memory_repo):
+    target_date = date.fromisoformat('2020-02-28')
+
+    uow = FakeUnitOfWork(in_memory_repo)
+    articles_as_dict, prev_date, next_date = services.get_articles_by_date(target_date, uow)
+
+    assert len(articles_as_dict) == 1
+    assert articles_as_dict[0]['id'] == 1
+
+    assert prev_date is None
+    assert next_date == date.fromisoformat('2020-02-29')
+
+
+def _get_articles_by_date_with_multiple_dates(in_memory_repo):
+    target_date = date.fromisoformat('2020-03-01')
+
+    uow = FakeUnitOfWork(in_memory_repo)
+    articles_as_dict, prev_date, next_date = services.get_articles_by_date(target_date, uow)
+
+# Sort out the order on this. Don't rely on order. Try membershis, or geerating a list ansd then ordering it.
+    assert len(articles_as_dict) == 3
+    assert articles_as_dict[0]['id'] == 5
+    assert articles_as_dict[1]['id'] == 4
+    assert articles_as_dict[2]['id'] == 3
+
+    assert prev_date == date.fromisoformat('2020-02-29')
+    assert next_date == date.fromisoformat('2020-03-05')
+
+
+def _get_articles_by_date_with_non_existent_date(in_memory_repo):
+    uow = FakeUnitOfWork(in_memory_repo)
+    # Should be an empty list.
