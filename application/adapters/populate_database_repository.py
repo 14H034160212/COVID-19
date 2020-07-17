@@ -1,5 +1,8 @@
 import csv
 import sqlite3
+import os
+from dotenv import load_dotenv
+
 
 from application.adapters.orm import metadata
 from sqlalchemy import create_engine
@@ -73,7 +76,16 @@ def generic_generator(filename):
 
 
 def main():
-    engine = create_engine('sqlite:///foo2.db')
+    load_dotenv(dotenv_path='..\\..\\.env')
+    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
+    COVID_INSTALL_PATH = os.getenv('COVID_INSTALL_PATH')
+
+    DATABASE_URI = os.path.join(COVID_INSTALL_PATH, SQLALCHEMY_DATABASE_URI)
+    print("Loaded vars", DATABASE_URI)
+
+
+    # Read URI from
+    engine = create_engine('sqlite://../data/covid-19.db')
 
     # Create tables.
     metadata.create_all(engine)
