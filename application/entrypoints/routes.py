@@ -1,7 +1,7 @@
 """Application routes."""
 from functools import wraps
 
-from flask import request, render_template, redirect, url_for, session
+from flask import request, render_template, redirect, url_for, session, current_app
 from flask import current_app as app
 
 from datetime import date

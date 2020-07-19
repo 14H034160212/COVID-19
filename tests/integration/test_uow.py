@@ -70,6 +70,7 @@ def test_uow_rolls_back_uncommited_work_by_default(session_factory):
     rows = list(new_session.execute('SELECT * FROM articles'))
     assert rows == []
 
+
 def test_uow_rolls_back_on_error(session_factory):
     class MyException(Exception):
         pass

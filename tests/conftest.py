@@ -1,5 +1,4 @@
 import os
-
 import pytest
 
 from sqlalchemy import create_engine
@@ -7,35 +6,56 @@ from sqlalchemy.orm import sessionmaker, clear_mappers
 
 from datetime import date, datetime
 
+from application import InMemoryUnitOfWork
+from application.adapters import memory_repository, database_repository
 from application.adapters.orm import metadata, map_model_to_tables
-from application.adapters.populate_memory_repository import make_repo
+from application.adapters.memory_repository import MemoryRepository
+
+
+IN_MEMORY_DATABASE_URI = 'sqlite://'
+#IN_MEMORY_DATABASE_URI = 'sqlite:///test.db'
+TEST_DATA_PATH = os.path.abspath(os.path.join('..', 'test_data'))
 
 
 @pytest.fixture
 def in_memory_repo():
-    data_path = os.path.abspath(os.path.join('..', 'test_data'))
-    return make_repo(data_path)
+    repo = MemoryRepository()
+    memory_repository.populate(TEST_DATA_PATH, repo)
+    return repo
+
 
 @pytest.fixture
-def in_memory_db():
-    engine = create_engine('sqlite:///:memory:')
+def in_memory_uow():
+    repo = MemoryRepository()
+    memory_repository.populate(TEST_DATA_PATH, repo)
+    return InMemoryUnitOfWork(repo)
+
+
+@pytest.fixture
+def session():
+    engine = create_engine(IN_MEMORY_DATABASE_URI)
     metadata.create_all(engine)
-    return engine
+    database_repository.populate(engine, TEST_DATA_PATH)
+    map_model_to_tables()
+    session_factory = sessionmaker(bind=engine)
+    yield session_factory()
+    metadata.drop_all(engine)
+    clear_mappers()
 
 
-@pytest.fixture
-def session_factory(in_memory_db):
+#@pytest.fixture
+def session_factory_old(in_memory_db):
     map_model_to_tables()
     yield sessionmaker(bind=in_memory_db)
     clear_mappers()
 
 
-@pytest.fixture
-def session(session_factory):
+#@pytest.fixture
+def session_old(session_factory):
     return session_factory()
 
 
-@pytest.fixture
+#@pytest.fixture
 def populated_session(in_memory_db):
     map_model_to_tables()
     session = sessionmaker(bind=in_memory_db)()

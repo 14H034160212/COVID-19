@@ -1,6 +1,9 @@
-from datetime import date
+from datetime import date, datetime
 
-from application.domain.model import User, Article, Tag, make_comment
+import pytest
+
+from application.domain.model import User, Article, Tag, Comment, make_comment
+from application.adapters.repository import RepositoryException
 
 
 def test_repository_can_add_a_user(in_memory_repo):
@@ -182,6 +185,26 @@ def test_repository_can_add_a_comment(in_memory_repo):
     in_memory_repo.add_comment(comment)
 
     assert comment in in_memory_repo.get_comments()
+
+
+def test_repository_does_not_add_a_comment_without_a_user(in_memory_repo):
+    article = in_memory_repo.get_article(2)
+    comment = Comment(None, article, "Trump's onto it!", datetime.today())
+
+    with pytest.raises(RepositoryException):
+        in_memory_repo.add_comment(comment)
+
+
+def test_repository_does_not_add_a_comment_without_an_article_properly_attached(in_memory_repo):
+    user = in_memory_repo.get_user('thorke')
+    article = in_memory_repo.get_article(2)
+    comment = Comment(None, article, "Trump's onto it!", datetime.today())
+
+    user.comments.append(comment)
+
+    with pytest.raises(RepositoryException):
+        # Exception expected because the Article doesn't refer to the Comment.
+        in_memory_repo.add_comment(comment)
 
 
 def test_repository_can_retrieve_comments(in_memory_repo):

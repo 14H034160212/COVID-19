@@ -5,11 +5,13 @@ from sqlalchemy.orm import scoped_session
 
 from flask import _app_ctx_stack
 
-from application.adapters import repository
+from application.adapters.repository import AbstractRepository
+from application.adapters.memory_repository import MemoryRepository
+from application.adapters.database_repository import SqlAlchemyRepository
 
 
 class AbstractUnitOfWork(abc.ABC):
-    repo: repository.AbstractRepository
+    repo: AbstractRepository
 
     def __enter__(self) -> AbstractUnitOfWork:
         return self
@@ -34,8 +36,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
 
     def __enter__(self):
         self.session = scoped_session(self.session_factory, scopefunc=_app_ctx_stack.__ident_func__)
-        print('In unit of work')
-        self.repo = repository.SqlAlchemyRepository(self.session)
+        self.repo = SqlAlchemyRepository(self.session)
         return super().__enter__()
 
     def __exit__(self, *args):
@@ -50,3 +51,16 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
     def close_current_session(self):
         if self.session is not None:
             self.session.close()
+
+
+class InMemoryUnitOfWork(AbstractUnitOfWork):
+
+    def __init__(self, repo: MemoryRepository):
+        self.repo = repo
+        self.committed = False
+
+    def commit(self):
+        self.committed = True
+
+    def rollback(self):
+        pass
