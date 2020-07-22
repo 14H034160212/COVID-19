@@ -61,6 +61,14 @@ class Comment:
     def timestamp(self) -> datetime:
         return self._timestamp
 
+    def __eq__(self, other):
+        if not isinstance(other, Comment):
+            return False
+        return other._user == self._user and other._article == self._article and other._comment == self._comment and other._timestamp == self._timestamp
+
+    def __hash__(self):
+        return hash(self._username)
+
 
 class Article:
     def __init__(

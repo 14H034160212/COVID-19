@@ -1,89 +1,85 @@
 import pytest
 
-import datetime
+from datetime import date
 
-from service_layer import unit_of_work
-from domain import model
+from application.domain.model import Article
+from application.service_layer import unit_of_work
+from application.domain import model
 
 
-def insert_article(session):
-    article_date = datetime.date(2020, 2, 28)
-    session.execute(
-        'INSERT INTO articles (date, title, first_para, hyperlink, image_hyperlink) VALUES '
-        '(:date, "Coronavirus: First case of virus in New Zealand", '
-        '"The first case of coronavirus has been confirmed in New Zealand  and authorities are now scrambling to track down people who may have come into contact with the patient.", '
-        '"https://www.stuff.co.nz/national/health/119899280/ministry-of-health-gives-latest-update-on-novel-coronavirus", '
-        '"https://resources.stuff.co.nz/content/dam/images/1/z/e/3/w/n/image.related.StuffLandscapeSixteenByNine.1240x700.1zduvk.png/1583369866749.jpg")',
-        {'date': article_date.isoformat()}
+def make_article(new_article_date):
+    article = Article(
+        new_article_date,
+        'Coronavirus travel restrictions: Self-isolation deadline pushed back to give airlines breathing room',
+        'The self-isolation deadline has been pushed back',
+        'https://www.nzherald.co.nz/business/news/article.cfm?c_id=3&objectid=12316800',
+        'https://th.bing.com/th/id/OIP.0lCxLKfDnOyswQCF9rcv7AHaCz?w=344&h=132&c=7&o=5&pid=1.7'
     )
-    row = session.execute('SELECT id from articles').fetchone()
-    return row[0]
+    return article
 
-def insert_user(session, values=None):
-    new_name = "Andrew"
-    new_password = "1234"
-
-    if values is not None:
-        new_name = values[0]
-        new_password = values[1]
-
-    session.execute('INSERT INTO users (username, password) VALUES (:username, :password)',
-                    {'username': new_name, 'password': new_password})
-    row = session.execute('SELECT id from users where username = :username',
-                          {'username': new_name}).fetchone()
-    return row[0]
-
-def get_comment_row(session, author_key: str):
-    row = session.execute('SELECT article_id, comment FROM comments WHERE user_id=:author_key',
-                          {'author_key': author_key}).fetchone()
-    return row
 
 def test_uow_can_retrieve_an_article_and_add_a_comment_to_it(session_factory):
-    session = session_factory()
-    article_key = insert_article(session)
-    user_key = insert_user(session, ['Cindy', '1111'])
-    session.commit()
-
     uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory)
     with uow:
         # Fetch Article and User.
-        article = uow.repo.get_article(article_key)
-        author = uow.repo.get_user('Cindy')
+        article = uow.repo.get_article(5)
+        author = uow.repo.get_user('thorke')
 
         # Create a new Comment, connecting it to the Article and User.
-        comment = model.make_comment('The virus is here!', author, article)
+        comment = model.make_comment('First death in Australia', author, article)
 
         # Commit the changes.
         uow.commit()
 
-    # Check that a Comment row has been added that links to the Article and User.
-    comment_row = get_comment_row(session, user_key)
-    assert comment_row[0] == article_key
-    assert comment_row[1] == 'The virus is here!'
-
-def test_uow_rolls_back_uncommited_work_by_default(session_factory):
+    # Check that a Comment has been added that links to the Article and User.
     uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory)
     with uow:
-        insert_article(uow.session)
+        # Fetch Article and User.
+        article = uow.repo.get_article(5)
+        author = uow.repo.get_user('thorke')
 
-    new_session = session_factory()
-    rows = list(new_session.execute('SELECT * FROM articles'))
-    assert rows == []
+        assert comment in article.comments
+        assert comment in author.comments
+
+
+def test_uow_rolls_back_uncommited_work_by_default(session_factory):
+    new_article_date = date.fromisoformat('2020-03-15')
+
+    uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory)
+    with uow:
+        article = make_article(new_article_date)
+
+        # Add the article but don't commit it.
+        uow.repo.add_article(article)
+
+    # Using a new unit of work, check that the new Article wasn't added to the repository.
+    uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory)
+    with uow:
+        articles = uow.repo.get_articles_by_date(new_article_date)
+
+        assert len(articles) == 0
 
 
 def test_uow_rolls_back_on_error(session_factory):
     class MyException(Exception):
         pass
 
+    new_article_date = date.fromisoformat('2020-03-15')
+
     uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory)
     with pytest.raises(MyException):
         with uow:
-            insert_article(uow.session)
+            article = make_article(new_article_date)
+            uow.repo.add_article(article)
             raise MyException()
 
-    new_session = session_factory()
-    rows = list(new_session.execute('SELECT * FROM articles'))
-    assert rows == []
+    # Using a new unit of work, check that the above exception caused the Article not to be added to the repository.
+    uow = unit_of_work.SqlAlchemyUnitOfWork(session_factory)
+    with uow:
+        articles = uow.repo.get_articles_by_date(new_article_date)
+
+        assert len(articles) == 0
+
 
 
 

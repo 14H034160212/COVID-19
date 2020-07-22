@@ -20,4 +20,4 @@ class Config:
     SQLALCHEMY_ECHO = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    COVID_REPOSITORY = environ.get('COVID_REPOSITORY')
+    REPOSITORY = environ.get('REPOSITORY')
