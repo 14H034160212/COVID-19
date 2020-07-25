@@ -1,6 +1,6 @@
 from datetime import date
 
-from application.domain.model import User, Article, Tag, make_comment, make_tag_association
+from covid.domain.model import User, Article, Tag, make_comment, make_tag_association
 
 
 def test_user_construction():

@@ -2,9 +2,9 @@ import pytest
 
 from datetime import date
 
-from application.domain.model import Article
-from application.service_layer import unit_of_work
-from application.domain import model
+from covid.domain.model import Article
+from covid.adapters import unit_of_work
+from covid.domain import model
 
 
 def make_article(new_article_date):

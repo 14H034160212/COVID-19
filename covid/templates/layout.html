@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>The COVID Pandemic of 2020</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+
+<body>
+	<div id="body">
+        <div>
+            <!-- Include header partial. -->
+            {% include 'header.html' %}
+        </div>
+
+		<div id="content-1" style="clear:both">
+            <!-- Include navigation partial. -->
+            {% include 'navigation.html' %}
+			
+			<div id="content-2">
+                <!-- Main content block to be supplied by page. -->
+                {% block content %}
+                {% endblock %}
+                
+                <!-- Include sidebar partial. -->
+                {% include 'sidebar.html' %}
+			</div>
+        </div>
+        
+        <!-- Include footer partial. -->
+        {% include 'footer.html' %}
+	</div>
+</body>
+
+</html>

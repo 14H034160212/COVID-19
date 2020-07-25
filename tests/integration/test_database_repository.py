@@ -2,9 +2,9 @@ from datetime import date, datetime
 
 import pytest
 
-from application.adapters.database_repository import SqlAlchemyRepository
-from application.domain.model import User, Article, Tag, Comment, make_comment
-from application.adapters.repository import RepositoryException
+from covid.adapters.database_repository import SqlAlchemyRepository
+from covid.domain.model import User, Article, Tag, Comment, make_comment
+from covid.adapters.repository import RepositoryException
 
 
 def test_repository_can_add_a_user(session):
