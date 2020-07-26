@@ -1,5 +1,7 @@
 """Initialize Flask app."""
 
+import os
+
 from flask import Flask
 
 from sqlalchemy import create_engine
@@ -21,7 +23,7 @@ def create_app(test_config=None):
 
     # Configure the app from configuration-file settings.
     app.config.from_object('config.Config')
-    data_path = 'covid\\adapters\\data'
+    data_path = os.path.join('covid', 'adapters', 'data')
 
     if test_config is not None:
         # Load test configuration, and override any configuration settings.

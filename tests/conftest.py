@@ -12,7 +12,7 @@ from covid.adapters.unit_of_work import InMemoryUnitOfWork
 
 
 TEST_DATABASE_URI = 'sqlite://'
-TEST_DATA_PATH = 'C:\\Users\\ianwo\\OneDrive\\Documents\\PythonDev\\repo 02.07.2020\\COVID-19\\tests\\data'
+TEST_DATA_PATH = os.path.join('C:', os.sep, 'Users', 'iwar006', 'Documents', 'Python dev', 'COVID-19', 'tests', 'data')
 
 
 @pytest.fixture

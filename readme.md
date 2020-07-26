@@ -44,9 +44,13 @@ The *COVID-19/.env* file contains variable settings. They are set with appropria
 
 Testing requires that file *COVID-19/tests/conftest.py* be edited to set the value of `TEST_DATA_PATH`. You should set this to the absolute path of the *COVID-19/tests/data* directory. 
 
-Using Python on Windows requires the use of \\\ as directory separators. E.g.
+E.g. 
 
-`TEST_DATA_PATH = 'C:\\Users\\ian\\python-dev\\COVID-19\\tests\\data'`
+`TEST_DATA_PATH = os.path.join('C:', os.sep, 'Users', 'ian', 'Documents', 'Python dev', 'COVID-19', 'tests', 'data')`
+
+assigns TEST_DATA_PATH with the following value (the use of os.path.join and os.sep ensures use of the correct platform path separator):
+
+`C:\Users\ian\Documents\python-dev\COVID-19\tests\data`
 
 You can then run tests from within PyCharm.
 
