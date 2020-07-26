@@ -23,6 +23,11 @@ a.btn_b:hover {
 }
 </style>
 
+<div>
+    {% if 'username' in session %}
+        {{ session['username'] }} is logged in
+    {% endif %}
+</div>
 <nav id="nav">
     <a class="btn_a" href="{{ url_for('home_bp.home') }}">Home</a>
     <a class="btn_a" href="{{ url_for('authentication_bp.register') }}">Register</a>
