@@ -17,6 +17,10 @@ def get_random_articles(quantity, uow: unit_of_work.AbstractUnitOfWork):
     with uow:
         article_count = uow.repo.get_number_of_articles()
 
+        if quantity >= article_count:
+            # Reduce the quantity of ids to generate if the repository has an insufficient number of articles.
+            quantity = article_count - 1
+
         # Pick distinct and random articles.
         random_ids = random.sample(range(1, article_count), quantity)
         articles = uow.repo.get_articles_by_id(random_ids)
