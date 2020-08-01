@@ -1,63 +1,63 @@
 html,
 body {
-	margin:0
-	padding:0;
-	color:#000;
-	background:#fff;
+  margin: 0;
+  padding: 0;
+  color: #000;
+  background: #fff;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 #body {
-	width:1280px;
-	margin:0 auto;
-	background:#ddd;
+  width: 1280px;
+  margin: 0 auto;
+  background: #ddd;
 }
 #header {
-	padding:10px;
-	background:#add;
+  padding: 10px;
+  background: #add;
 }
 #nav {
-	float:left;
-	width:130px;
-	padding:10px;
-	background:#bfb;
+  float: left;
+  width: 130px;
+  padding: 10px;
+  background: #bfb;
 }
 #content-2 {
-	float:right;
-	width:1130px;
+  float: right;
+  width: 1130px;
 }
 #main {
-	float:left;
-	width:810px;
-	padding:10px;
-	background:#fff;
+  float: left;
+  width: 810px;
+  padding: 10px;
+  background: #fff;
 }
 
 #sidebar {
-	float:right;
-	width:280px;
-	padding:10px;
-	background:#dff;
+  float: right;
+  width: 280px;
+  padding: 10px;
+  background: #dff;
 }
 #footer {
-	clear:both;
-	padding:10px;
-	background:#ff9;
+  clear: both;
+  padding: 10px;
+  background: #ff9;
 }
 img {
-    float:left;
-    width: 300px;
-    height:auto;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 5px;
-
+  float: left;
+  width: 300px;
+  height: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 5px;
 }
 .small-img {
-    float:left;
-    width: 100px;
-    height:auto;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 5px;
+  float: left;
+  width: 100px;
+  height: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 5px;
 }
 
 /* Form styling */
@@ -67,7 +67,7 @@ form {
   width: 400px;
   /* Form outline */
   padding: 1em;
-  border: 1px solid #CCC;
+  border: 1px solid #ccc;
   border-radius: 1em;
 }
 
@@ -88,7 +88,7 @@ label {
   text-align: right;
 }
 
-input, 
+input,
 textarea {
   /* To make sure that all text fields have the same font settings
      By default, textareas have a monospace font */
@@ -102,7 +102,7 @@ textarea {
   border: 1px solid #999;
 }
 
-input:focus, 
+input:focus,
 textarea:focus {
   /* Additional highlight for focused elements */
   border-color: #000;
@@ -124,5 +124,5 @@ textarea {
 button {
   /* This extra margin represent roughly the same space as the space
      between the labels and their text fields */
-  margin-left: .5em;
+  margin-left: 0.5em;
 }
