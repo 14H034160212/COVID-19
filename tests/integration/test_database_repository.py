@@ -113,10 +113,10 @@ def test_repository_can_retrieve_tags(session):
     tag_three = [tag for tag in tags if tag.tag_name == 'World'][0]
     tag_four = [tag for tag in tags if tag.tag_name == 'Politics'][0]
 
-    assert len(tag_one.tagged_articles) == 3
-    assert len(tag_two.tagged_articles) == 2
-    assert len(tag_three.tagged_articles) == 3
-    assert len(tag_four.tagged_articles) == 1
+    assert tag_one.number_of_tagged_articles == 3
+    assert tag_two.number_of_tagged_articles == 2
+    assert tag_three.number_of_tagged_articles == 3
+    assert tag_four.number_of_tagged_articles == 1
 
 
 def test_repository_can_get_first_article(session):

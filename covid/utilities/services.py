@@ -1,4 +1,4 @@
-from typing import List
+from typing import Iterable
 import random
 
 from covid.adapters import unit_of_work
@@ -41,5 +41,5 @@ def article_to_dict(article: Article):
     return article_dict
 
 
-def articles_to_dict(articles: List[Article]):
+def articles_to_dict(articles: Iterable[Article]):
     return [article_to_dict(article) for article in articles]

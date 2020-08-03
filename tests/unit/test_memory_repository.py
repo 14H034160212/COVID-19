@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from typing import List
 
 import pytest
 
@@ -81,7 +82,7 @@ def test_repository_does_not_retrieve_an_article_when_there_are_no_articles_for_
 
 
 def test_repository_can_retrieve_tags(in_memory_repo):
-    tags = in_memory_repo.get_tags()
+    tags: List[Tag] = in_memory_repo.get_tags()
 
     assert len(tags) == 4
 
@@ -90,10 +91,10 @@ def test_repository_can_retrieve_tags(in_memory_repo):
     tag_three = [tag for tag in tags if tag.tag_name == 'World'][0]
     tag_four = [tag for tag in tags if tag.tag_name == 'Politics'][0]
 
-    assert len(tag_one.tagged_articles) == 3
-    assert len(tag_two.tagged_articles) == 2
-    assert len(tag_three.tagged_articles) == 3
-    assert len(tag_four.tagged_articles) == 1
+    assert tag_one.number_of_tagged_articles == 3
+    assert tag_two.number_of_tagged_articles == 2
+    assert tag_three.number_of_tagged_articles == 3
+    assert tag_four.number_of_tagged_articles == 1
 
 
 def test_repository_can_get_first_article(in_memory_repo):
@@ -200,7 +201,7 @@ def test_repository_does_not_add_a_comment_without_an_article_properly_attached(
     article = in_memory_repo.get_article(2)
     comment = Comment(None, article, "Trump's onto it!", datetime.today())
 
-    user.comments.append(comment)
+    user.add_comment(comment)
 
     with pytest.raises(RepositoryException):
         # Exception expected because the Article doesn't refer to the Comment.

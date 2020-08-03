@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Iterable
 
 from covid.adapters import unit_of_work
 from covid.domain.model import make_comment, Article, Comment, Tag
@@ -120,7 +120,7 @@ def article_to_dict(article: Article):
     return article_dict
 
 
-def articles_to_dict(articles: List[Article]):
+def articles_to_dict(articles: Iterable[Article]):
     return [article_to_dict(article) for article in articles]
 
 
@@ -134,7 +134,7 @@ def comment_to_dict(comment: Comment):
     return comment_dict
 
 
-def comments_to_dict(comments: List[Comment]):
+def comments_to_dict(comments: Iterable[Comment]):
     return [comment_to_dict(comment) for comment in comments]
 
 
@@ -146,7 +146,7 @@ def tag_to_dict(tag: Tag):
     return tag_dict
 
 
-def tags_to_dict(tags: List[Tag]):
+def tags_to_dict(tags: Iterable[Tag]):
     return [tag_to_dict(tag) for tag in tags]
 
 
