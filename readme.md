@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # COVID-19 Web Application
 
 ## Description
@@ -71,11 +70,3 @@ $ coverage html
 ````
 
 The generated report is stored in the *htmlcov* directory. Open the *COVID-19/htmlcov/index.html* file in a Web browser to see the report.
- 
-=======
-# Covid-19 Web Application
-
-Branches:
-- domain_model - Initial domain model.
-- repository   - Application of repository pattern.
->>>>>>> f5f51222b728e2d5dd5c10ba45754e52adbe3bc3
